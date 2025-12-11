@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  quickpdf-mock-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+    volumes:
+      - ./logs:/app/logs
+      - ./temp:/app/temp
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/v1/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL (for future use)
+  quickpdf-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: quickpdf_db
+      POSTGRES_USER: quickpdf_user
+      POSTGRES_PASSWORD: quickpdf_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./src/migrations:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    profiles:
+      - full
+
+  # Redis (for future use)
+  quickpdf-redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    profiles:
+      - full
+
+volumes:
+  postgres_data:
+  redis_data:

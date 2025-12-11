@@ -1,0 +1,59 @@
+name: quickpdf_app
+description: QuickPDF - PDF generation and template marketplace mobile application
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.10.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  provider: ^6.1.1
+  
+  # HTTP and API
+  http: ^1.1.0
+  dio: ^5.3.2
+  
+  # Local Storage
+  shared_preferences: ^2.2.2
+  sqflite: ^2.3.0
+  path_provider: ^2.1.1
+  path: ^1.8.3
+  
+  # PDF Generation
+  pdf: ^3.10.7
+  printing: ^5.14.2
+  
+  # UI and Navigation
+  go_router: ^17.0.1
+  flutter_svg: ^2.0.9
+  cached_network_image: ^3.3.0
+  
+  # Utilities
+  intl: ^0.20.2
+  uuid: ^4.1.0
+  
+  # Security
+  crypto: ^3.0.3
+  
+  # File handling
+  file_picker: ^10.3.7
+  share_plus: ^12.0.1
+  
+  # Connectivity
+  connectivity_plus: ^7.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  test: ^1.26.3
+
+flutter:
+  uses-material-design: true

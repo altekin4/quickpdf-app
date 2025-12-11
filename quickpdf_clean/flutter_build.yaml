@@ -1,0 +1,17 @@
+# Flutter build configuration - Turkish character path fix
+targets:
+  $default:
+    builders:
+      flutter_tools:flutter_shader_compiler:
+        options:
+          # Completely disable Impeller shader compilation
+          enable_impeller: false
+          use_skia_renderer: true
+          disable_shader_compilation: true
+          
+      flutter_tools:flutter_assets:
+        options:
+          # Use UTF-8 encoding for assets
+          asset_encoding: utf-8
+          # Skip problematic shader assets
+          exclude_shaders: true

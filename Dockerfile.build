@@ -1,0 +1,45 @@
+# Flutter APK Builder Docker Image
+FROM ubuntu:22.04
+
+# Gerekli paketleri yükle
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    unzip \
+    xz-utils \
+    zip \
+    libglu1-mesa \
+    openjdk-17-jdk \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Android SDK kurulumu
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools
+
+RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip && \
+    unzip commandlinetools-linux-9477386_latest.zip -d ${ANDROID_HOME}/cmdline-tools && \
+    mv ${ANDROID_HOME}/cmdline-tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest && \
+    rm commandlinetools-linux-9477386_latest.zip
+
+# Android SDK bileşenlerini yükle
+RUN yes | sdkmanager --licenses && \
+    sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
+# Flutter kurulumu
+ENV FLUTTER_HOME=/opt/flutter
+ENV PATH=${PATH}:${FLUTTER_HOME}/bin
+
+RUN git clone https://github.com/flutter/flutter.git -b stable ${FLUTTER_HOME} && \
+    flutter doctor && \
+    flutter config --android-sdk ${ANDROID_HOME}
+
+# Çalışma dizini
+WORKDIR /app
+
+# Build script
+COPY docker-build.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-build.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-build.sh"]

@@ -1,0 +1,7 @@
+# Flutter Engine Configuration Override
+# This file forces Flutter to use legacy Skia renderer
+
+enable-impeller=false
+use-skia-renderer=true
+disable-shader-compilation=true
+force-legacy-renderer=true

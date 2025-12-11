@@ -1,0 +1,13 @@
+# Flutter build configuration
+targets:
+  $default:
+    builders:
+      flutter_tools:flutter_shader_compiler:
+        options:
+          # Disable problematic shader compilation for Turkish paths
+          enable_impeller: false
+          
+      flutter_tools:flutter_assets:
+        options:
+          # Use UTF-8 encoding for assets
+          asset_encoding: utf-8

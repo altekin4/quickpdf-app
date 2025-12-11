@@ -29,17 +29,23 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.16.9'
+        flutter-version: '3.24.0'
         channel: 'stable'
         cache: true
         
     - name: Get Flutter Dependencies
-      run: flutter pub get
+      run: |
+        flutter doctor -v
+        flutter pub get
+        flutter pub deps
       working-directory: ./quickpdf_app
       
     - name: Build Mobile Debug APK
       if: github.event.inputs.build_type == 'debug' || github.event.inputs.build_type == ''
-      run: flutter build apk --debug --target=lib/main_mobile.dart --split-per-abi
+      run: |
+        flutter clean
+        flutter pub get
+        flutter build apk --debug --target=lib/main_mobile.dart --split-per-abi --verbose
       working-directory: ./quickpdf_app
       
     - name: Build Mobile Release APK

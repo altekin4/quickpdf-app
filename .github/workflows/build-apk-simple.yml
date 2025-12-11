@@ -1,0 +1,53 @@
+name: Build APK Simple
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+        cache: true
+        
+    - name: Flutter Doctor
+      run: flutter doctor -v
+      
+    - name: Install dependencies
+      run: flutter pub get
+      working-directory: ./quickpdf_app
+      
+    - name: Analyze code
+      run: flutter analyze
+      working-directory: ./quickpdf_app
+      continue-on-error: true
+      
+    - name: Build APK
+      run: |
+        flutter clean
+        flutter pub get
+        flutter build apk --debug --target=lib/main_mobile.dart
+      working-directory: ./quickpdf_app
+      
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: quickpdf-debug-apk
+        path: quickpdf_app/build/app/outputs/flutter-apk/app-debug.apk
+        retention-days: 30

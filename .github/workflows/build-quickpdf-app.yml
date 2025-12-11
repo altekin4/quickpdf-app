@@ -1,0 +1,42 @@
+name: Build QuickPDF App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.6'
+        channel: 'stable'
+        
+    - name: Get dependencies
+      run: |
+        cd quickpdf_app
+        flutter clean
+        flutter pub get --no-example
+        
+    - name: Build APK
+      run: |
+        cd quickpdf_app
+        flutter build apk --debug --target=lib/main_mobile.dart --no-shrink
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: quickpdf-app-debug-apk
+        path: quickpdf_app/build/app/outputs/flutter-apk/app-debug.apk
+        retention-days: 30

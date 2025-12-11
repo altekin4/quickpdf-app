@@ -1,0 +1,74 @@
+name: Build APK Minimal
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.19.6'
+        channel: 'stable'
+        
+    - name: Create minimal pubspec.yaml
+      run: |
+        cat > quickpdf_clean/pubspec.yaml << 'EOF'
+        name: quickpdf_app
+        description: QuickPDF Mobile App
+        version: 1.0.0+1
+        
+        environment:
+          sdk: '>=3.0.0 <4.0.0'
+          flutter: ">=3.10.0"
+        
+        dependencies:
+          flutter:
+            sdk: flutter
+          provider: ^6.1.1
+          http: ^1.1.0
+          shared_preferences: ^2.2.2
+          path_provider: ^2.1.1
+          path: ^1.8.3
+          intl: ^0.18.1
+          uuid: ^4.1.0
+          crypto: ^3.0.3
+        
+        dev_dependencies:
+          flutter_test:
+            sdk: flutter
+          flutter_lints: ^3.0.0
+        
+        flutter:
+          uses-material-design: true
+        EOF
+        
+    - name: Get dependencies
+      run: |
+        cd quickpdf_clean
+        flutter clean
+        flutter pub get --no-example
+        
+    - name: Build APK
+      run: |
+        cd quickpdf_clean
+        flutter build apk --debug --target=lib/main_mobile.dart --no-shrink --no-tree-shake-icons
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: quickpdf-minimal-apk
+        path: quickpdf_clean/build/app/outputs/flutter-apk/app-debug.apk
+        retention-days: 30

@@ -43,35 +43,7 @@ class MockAuthProvider extends ChangeNotifier {
       'total_earnings': 500.0,
       'created_at': DateTime.now().toIso8601String(),
     },
-    {
-      'id': '3',
-      'email': 'creator@quickpdf.com',
-      'password': 'creator123',
-      'full_name': 'İçerik Üreticisi',
-      'role': 'creator',
-      'is_verified': true,
-      'balance': 250.0,
-      'total_earnings': 150.0,
-      'created_at': DateTime.now().toIso8601String(),
-    },
   ];
-
-  Future<void> initializeAuth() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString(AppConfig.userTokenKey);
-      final userData = prefs.getString(AppConfig.userDataKey);
-      
-      if (token != null && userData != null) {
-        _token = token;
-        final userMap = json.decode(userData);
-        _currentUser = User.fromJson(userMap);
-        notifyListeners();
-      }
-    } catch (e) {
-      debugPrint('Error initializing auth: $e');
-    }
-  }
 
   void setLoading(bool loading) {
     _isLoading = loading;
@@ -83,9 +55,25 @@ class MockAuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setUser(User? user) {
-    _currentUser = user;
-    notifyListeners();
+  Future<void> loadUserFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(AppConfig.userTokenKey);
+      final userData = prefs.getString(AppConfig.userDataKey);
+
+      if (token != null && userData != null) {
+        _token = token;
+        final userJson = json.decode(userData);
+        _currentUser = User.fromJson(userJson);
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error loading user from storage: $e');
+    }
+  }
+
+  Future<void> initializeAuth() async {
+    await loadUserFromStorage();
   }
 
   Future<bool> login(String email, String password) async {
@@ -93,43 +81,37 @@ class MockAuthProvider extends ChangeNotifier {
     setError(null);
 
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 1000));
+      await Future.delayed(const Duration(seconds: 2));
 
-      // Find mock user
-      final mockUser = _mockUsers.firstWhere(
+      final user = _mockUsers.firstWhere(
         (user) => user['email'] == email && user['password'] == password,
         orElse: () => {},
       );
 
-      if (mockUser.isNotEmpty) {
-        // Generate mock token
-        _token = 'mock_token_${DateTime.now().millisecondsSinceEpoch}';
-        
-        // Create user from mock data
-        _currentUser = User(
-          id: mockUser['id'],
-          email: mockUser['email'],
-          fullName: mockUser['full_name'],
-          role: _parseUserRole(mockUser['role']),
-          isVerified: mockUser['is_verified'] ?? true,
-          balance: double.tryParse(mockUser['balance']?.toString() ?? '0') ?? 0.0,
-          totalEarnings: double.tryParse(mockUser['total_earnings']?.toString() ?? '0') ?? 0.0,
-          createdAt: DateTime.tryParse(mockUser['created_at'] ?? '') ?? DateTime.now(),
-        );
-        
-        // Save to storage
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(AppConfig.userTokenKey, _token!);
-        await prefs.setString(AppConfig.userDataKey, json.encode(_currentUser!.toJson()));
-        
-        setLoading(false);
-        return true;
-      } else {
+      if (user.isEmpty) {
         setError('Geçersiz email veya şifre');
         setLoading(false);
         return false;
       }
+
+      _token = 'mock_token_${DateTime.now().millisecondsSinceEpoch}';
+      _currentUser = User(
+        id: user['id'],
+        email: user['email'],
+        fullName: user['full_name'],
+        role: UserRole.values.firstWhere((r) => r.name == user['role']),
+        isVerified: user['is_verified'],
+        balance: user['balance'],
+        totalEarnings: user['total_earnings'],
+        createdAt: DateTime.parse(user['created_at']),
+      );
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(AppConfig.userTokenKey, _token!);
+      await prefs.setString(AppConfig.userDataKey, json.encode(_currentUser!.toJson()));
+
+      setLoading(false);
+      return true;
     } catch (e) {
       debugPrint('Login error: $e');
       setError('Giriş hatası: $e');
@@ -143,10 +125,8 @@ class MockAuthProvider extends ChangeNotifier {
     setError(null);
 
     try {
-      // Simulate network delay
-      await Future.delayed(const Duration(milliseconds: 1500));
+      await Future.delayed(const Duration(seconds: 2));
 
-      // Check if user already exists
       final existingUser = _mockUsers.any((user) => user['email'] == email);
       
       if (existingUser) {
@@ -155,7 +135,6 @@ class MockAuthProvider extends ChangeNotifier {
         return false;
       }
 
-      // Create new mock user
       final newUserId = (_mockUsers.length + 1).toString();
       _token = 'mock_token_${DateTime.now().millisecondsSinceEpoch}';
       
@@ -170,7 +149,6 @@ class MockAuthProvider extends ChangeNotifier {
         createdAt: DateTime.now(),
       );
       
-      // Add to mock users list
       _mockUsers.add({
         'id': newUserId,
         'email': email,
@@ -183,7 +161,6 @@ class MockAuthProvider extends ChangeNotifier {
         'created_at': DateTime.now().toIso8601String(),
       });
       
-      // Save to storage
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConfig.userTokenKey, _token!);
       await prefs.setString(AppConfig.userDataKey, json.encode(_currentUser!.toJson()));
@@ -200,7 +177,6 @@ class MockAuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     try {
-      // Clear storage
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(AppConfig.userTokenKey);
       await prefs.remove(AppConfig.userDataKey);
@@ -208,55 +184,78 @@ class MockAuthProvider extends ChangeNotifier {
       _currentUser = null;
       _token = null;
       _error = null;
+      
       notifyListeners();
     } catch (e) {
       debugPrint('Logout error: $e');
     }
   }
 
-  Future<void> refreshUser() async {
-    if (!isLoggedIn) return;
+  Future<void> resendVerificationEmail(String email) async {
+    setLoading(true);
+    setError(null);
 
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      notifyListeners();
+      await Future.delayed(const Duration(seconds: 2));
+      debugPrint('Verification email sent to: $email');
+      setLoading(false);
     } catch (e) {
-      setError('Kullanıcı bilgileri güncellenirken hata oluştu: $e');
+      setError('E-posta gönderme hatası: $e');
+      setLoading(false);
+      throw Exception('E-posta gönderme hatası: $e');
     }
   }
 
-  Future<void> checkAuthStatus() async {
-    await initializeAuth();
-  }
-
-  Map<String, String> get authHeaders {
-    if (_token != null) {
-      return {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $_token',
-      };
-    }
-    return {'Content-Type': 'application/json'};
-  }
-
-  UserRole _parseUserRole(String? role) {
-    switch (role?.toLowerCase()) {
-      case 'admin':
-        return UserRole.admin;
-      case 'creator':
-        return UserRole.creator;
-      case 'user':
-      default:
-        return UserRole.user;
+  Future<bool> checkEmailVerification() async {
+    try {
+      await Future.delayed(const Duration(seconds: 1));
+      
+      if (_currentUser != null) {
+        _currentUser = _currentUser!.copyWith(isVerified: true);
+        notifyListeners();
+        return true;
+      }
+      
+      return false;
+    } catch (e) {
+      setError('Doğrulama kontrolü hatası: $e');
+      throw Exception('Doğrulama kontrolü hatası: $e');
     }
   }
 
-  // Helper method to get mock user credentials for testing
-  List<Map<String, String>> getMockCredentials() {
-    return [
-      {'email': 'test@test.com', 'password': '123456', 'role': 'Kullanıcı'},
-      {'email': 'admin@quickpdf.com', 'password': 'admin123', 'role': 'Admin'},
-      {'email': 'creator@quickpdf.com', 'password': 'creator123', 'role': 'İçerik Üreticisi'},
-    ];
+  Future<void> sendPasswordResetEmail(String email) async {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await Future.delayed(const Duration(seconds: 2));
+      
+      final userExists = _mockUsers.any((user) => user['email'] == email);
+      if (!userExists) {
+        throw Exception('Bu e-posta adresi ile kayıtlı kullanıcı bulunamadı');
+      }
+      
+      debugPrint('Password reset email sent to: $email');
+      setLoading(false);
+    } catch (e) {
+      setError('Şifre sıfırlama e-postası gönderme hatası: $e');
+      setLoading(false);
+      throw Exception('Şifre sıfırlama e-postası gönderme hatası: $e');
+    }
+  }
+
+  Future<void> resetPassword(String token, String newPassword) async {
+    setLoading(true);
+    setError(null);
+
+    try {
+      await Future.delayed(const Duration(seconds: 2));
+      debugPrint('Password reset with token: $token');
+      setLoading(false);
+    } catch (e) {
+      setError('Şifre sıfırlama hatası: $e');
+      setLoading(false);
+      throw Exception('Şifre sıfırlama hatası: $e');
+    }
   }
 }

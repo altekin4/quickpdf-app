@@ -16,6 +16,7 @@ class Template {
   final int purchaseCount;
   final String version;
   final String? previewImageUrl;
+  final List<String> tags;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool? isCached;
@@ -38,6 +39,7 @@ class Template {
     required this.purchaseCount,
     required this.version,
     this.previewImageUrl,
+    this.tags = const [],
     required this.createdAt,
     required this.updatedAt,
     this.isCached,

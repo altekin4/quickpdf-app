@@ -207,6 +207,7 @@ class TemplateProvider extends ChangeNotifier {
     String? category,
     String? priceFilter,
     String? sortBy,
+    String? tag,
   }) async {
     await loadTemplates(
       search: query,

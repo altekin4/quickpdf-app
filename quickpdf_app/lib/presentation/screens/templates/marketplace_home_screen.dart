@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/template_provider.dart';
+import '../../providers/tag_provider.dart';
 import '../../../domain/entities/template.dart';
 import 'template_detail_screen.dart';
 import 'template_list_screen.dart';
 import '../../widgets/offline_template_manager.dart';
+import '../../widgets/tag_widgets.dart';
 
 class MarketplaceHomeScreen extends StatefulWidget {
   const MarketplaceHomeScreen({super.key});
@@ -20,6 +22,7 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TemplateProvider>().loadTemplates();
       context.read<TemplateProvider>().loadCategories();
+      context.read<TagProvider>().loadTags();
     });
   }
 
@@ -67,6 +70,11 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
 
               // Categories
               _buildCategoriesSection(),
+
+              const SizedBox(height: 24),
+
+              // Popular tags
+              _buildPopularTagsSection(),
 
               const SizedBox(height: 24),
 
@@ -594,3 +602,30 @@ class _MarketplaceHomeScreenState extends State<MarketplaceHomeScreen> {
     }
   }
 }
+  Widget _buildPopularTagsSection() {
+    return Consumer<TagProvider>(
+      builder: (context, tagProvider, child) {
+        if (tagProvider.isLoading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (tagProvider.popularTags.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return PopularTagsWidget(
+          tags: tagProvider.popularTags,
+          onTagTap: (tag) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TemplateListScreen(
+                  initialTag: tag.name,
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }

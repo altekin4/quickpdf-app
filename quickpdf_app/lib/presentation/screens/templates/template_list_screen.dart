@@ -5,7 +5,9 @@ import '../../providers/template_provider.dart';
 import '../../../core/theme/app_theme.dart';
 
 class TemplateListScreen extends StatefulWidget {
-  const TemplateListScreen({super.key});
+  final String? initialTag;
+  
+  const TemplateListScreen({super.key, this.initialTag});
 
   @override
   State<TemplateListScreen> createState() => _TemplateListScreenState();
@@ -16,12 +18,17 @@ class _TemplateListScreenState extends State<TemplateListScreen> {
   String _selectedCategory = 'Tümü';
   String _selectedPriceFilter = 'Tümü';
   String _selectedSortBy = 'Popülerlik';
+  String? _selectedTag;
 
   @override
   void initState() {
     super.initState();
+    _selectedTag = widget.initialTag;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TemplateProvider>().loadTemplates();
+      if (_selectedTag != null) {
+        _applyFilters();
+      }
     });
   }
 
@@ -38,6 +45,7 @@ class _TemplateListScreenState extends State<TemplateListScreen> {
       category: _selectedCategory == 'Tümü' ? null : _selectedCategory,
       priceFilter: _selectedPriceFilter,
       sortBy: _selectedSortBy,
+      tag: _selectedTag,
     );
   }
 

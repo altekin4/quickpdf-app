@@ -2,6 +2,8 @@ class User {
   final String id;
   final String email;
   final String fullName;
+  final String? phone;
+  final String? profilePictureUrl;
   final UserRole role;
   final bool isVerified;
   final double balance;
@@ -12,6 +14,8 @@ class User {
     required this.id,
     required this.email,
     required this.fullName,
+    this.phone,
+    this.profilePictureUrl,
     required this.role,
     required this.isVerified,
     required this.balance,
@@ -23,6 +27,8 @@ class User {
     String? id,
     String? email,
     String? fullName,
+    String? phone,
+    String? profilePictureUrl,
     UserRole? role,
     bool? isVerified,
     double? balance,
@@ -33,6 +39,8 @@ class User {
       id: id ?? this.id,
       email: email ?? this.email,
       fullName: fullName ?? this.fullName,
+      phone: phone ?? this.phone,
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
       role: role ?? this.role,
       isVerified: isVerified ?? this.isVerified,
       balance: balance ?? this.balance,

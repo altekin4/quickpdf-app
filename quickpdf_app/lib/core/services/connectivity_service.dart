@@ -9,7 +9,7 @@ class ConnectivityService extends ChangeNotifier {
   ConnectivityService._internal();
 
   final Connectivity _connectivity = Connectivity();
-  StreamSubscription<ConnectivityResult>? _connectivitySubscription;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   
   bool _isOnline = true;
   bool _hasBeenInitialized = false;
@@ -29,8 +29,8 @@ class ConnectivityService extends ChangeNotifier {
 
     // Listen for connectivity changes
     _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
-      (ConnectivityResult result) {
-        _handleConnectivityChange([result]);
+      (List<ConnectivityResult> results) {
+        _handleConnectivityChange(results);
       },
     );
 
@@ -61,8 +61,8 @@ class ConnectivityService extends ChangeNotifier {
   /// Update connectivity status
   Future<void> _updateConnectivityStatus() async {
     try {
-      final result = await _connectivity.checkConnectivity();
-      _isOnline = _hasInternetConnection([result]);
+      final results = await _connectivity.checkConnectivity();
+      _isOnline = _hasInternetConnection(results);
     } catch (e) {
       if (kDebugMode) {
         print('Error checking connectivity: $e');

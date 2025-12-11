@@ -20,7 +20,7 @@ dependencies:
   
   # Local Storage
   shared_preferences: ^2.5.4
-  sqflite: ^2.4.2
+  sqflite: ^2.3.3
   path_provider: ^2.1.5
   
   # PDF Generation
@@ -40,11 +40,11 @@ dependencies:
   crypto: ^3.0.7
   
   # File handling
-  file_picker: ^10.3.7
-  share_plus: ^12.0.1
+  file_picker: ^8.1.2
+  share_plus: ^10.0.2
   
   # Connectivity
-  connectivity_plus: ^7.0.0
+  connectivity_plus: ^6.1.0
 
 dev_dependencies:
   flutter_test:
